@@ -1,5 +1,5 @@
-from api.interp_inference import InterpInference
-from api.interp_inference import DEFAULT_MODEL
+from api.interp_inference import DEFAULT_MODEL, InterpInference
+
 
 def main():
     inference = InterpInference(model=DEFAULT_MODEL)

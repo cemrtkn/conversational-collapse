@@ -46,13 +46,13 @@ class TestRandomPromptFetcher:
         fetcher = RandomPromptFetcher()
 
         # Mock the individual methods
-        with patch.object(
-            fetcher, "_get_writing_prompt"
-        ) as mock_writing, patch.object(
-            fetcher, "_get_analytical_prompt"
-        ) as mock_analytical, patch.object(
-            fetcher, "_get_conversational_prompt"
-        ) as mock_conversational:
+        with (
+            patch.object(fetcher, "_get_writing_prompt") as mock_writing,
+            patch.object(fetcher, "_get_analytical_prompt") as mock_analytical,
+            patch.object(
+                fetcher, "_get_conversational_prompt"
+            ) as mock_conversational,
+        ):
 
             # Set up mock responses
             mock_writing.return_value = "Test writing prompt"

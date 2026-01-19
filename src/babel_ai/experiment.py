@@ -110,9 +110,9 @@ class Experiment:
         self.result_metrics: List[Metric] = []
 
         # keep track of message history for the experiment
-        self.messages: List[
-            Dict[str, str]
-        ] = self.prompt_fetcher.get_conversation()
+        self.messages: List[Dict[str, str]] = (
+            self.prompt_fetcher.get_conversation()
+        )
 
         # update metadata
         self.metadata.num_fetcher_messages = len(self.messages)

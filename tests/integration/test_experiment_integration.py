@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from api.interp_inference import DEFAULT_MODEL
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
 from babel_ai.experiment import Experiment
 from models import (
@@ -24,7 +25,6 @@ from models import (
     FetcherMetric,
 )
 from models.api import LLMResponse
-from api.interp_inference import DEFAULT_MODEL
 
 
 @pytest.fixture
@@ -119,7 +119,7 @@ class TestExperimentIntegration:
         # Setup mock InterpInference to return realistic responses
         mock_interp_instance = MagicMock()
         mock_interp_class.return_value = mock_interp_instance
-        
+
         test_response_content = (
             "This is a test response from the NNsight model. "
             "It contains some realistic content for testing purposes."
@@ -177,7 +177,7 @@ class TestExperimentIntegration:
             model=DEFAULT_MODEL,
             device="cpu",
         )
-        
+
         # Verify generate_from_messages was called
         mock_interp_instance.generate_from_messages.assert_called()
 

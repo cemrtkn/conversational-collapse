@@ -40,9 +40,11 @@ class TestExperimentExecution:
         """Test parallel vs sequential execution."""
         mock_config = MagicMock(spec=ExperimentConfig)
 
-        with patch("main.run_experiment") as mock_run, patch(
-            "main.setup_logging"
-        ), patch("main.os.makedirs"):
+        with (
+            patch("main.run_experiment") as mock_run,
+            patch("main.setup_logging"),
+            patch("main.os.makedirs"),
+        ):
 
             # Test parallel (default)
             await run_experiment_batch([mock_config, mock_config])

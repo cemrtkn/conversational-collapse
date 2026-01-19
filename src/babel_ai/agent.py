@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class Agent:
-    """An agent that generates responses using NNsight-based local inference."""
+    """An agent that generates responses
+    using NNsight-based local inference."""
 
     def __init__(self, agent_config: AgentConfig):
         """Initialize the Agent with configuration.

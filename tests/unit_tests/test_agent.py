@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from api.interp_inference import DEFAULT_MODEL
 from babel_ai.agent import Agent
 from models import AgentConfig
 from models.api import LLMResponse
-from api.interp_inference import DEFAULT_MODEL
 
 
 @pytest.fixture

@@ -6,6 +6,7 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
+from api.interp_inference import DEFAULT_MODEL
 from babel_ai.agent import Agent
 from babel_ai.analyzer import Analyzer
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
@@ -20,7 +21,7 @@ from models import (
     FetcherConfig,
     FetcherMetric,
 )
-from api.interp_inference import DEFAULT_MODEL
+
 
 @pytest.fixture
 def sample_agent_config():
@@ -365,11 +366,10 @@ class TestExperiment:
         experiment = Experiment(sample_experiment_config)
 
         # Mock the methods called by run
-        with patch.object(
-            experiment, "run_interaction_loop"
-        ) as mock_generate, patch.object(
-            experiment, "_save_results_to_csv"
-        ) as mock_save:
+        with (
+            patch.object(experiment, "run_interaction_loop") as mock_generate,
+            patch.object(experiment, "_save_results_to_csv") as mock_save,
+        ):
 
             mock_generate.return_value = []
             results = experiment.run()
@@ -407,11 +407,10 @@ class TestExperiment:
         custom_output_dir = Path("/custom/test/path")
 
         # Mock the methods called by run
-        with patch.object(
-            experiment, "run_interaction_loop"
-        ) as mock_generate, patch.object(
-            experiment, "_save_results_to_csv"
-        ) as mock_save:
+        with (
+            patch.object(experiment, "run_interaction_loop") as mock_generate,
+            patch.object(experiment, "_save_results_to_csv") as mock_save,
+        ):
 
             mock_generate.return_value = []
             experiment.run(output_dir=custom_output_dir)

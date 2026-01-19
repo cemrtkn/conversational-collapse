@@ -45,8 +45,9 @@ class TestBasePromptFetcher:
 
     def test_create_fetcher_topical_chat(self):
         """Test creating a TopicalChatConversationFetcher."""
-        with patch("builtins.open"), patch(
-            "pathlib.Path.exists", return_value=True
+        with (
+            patch("builtins.open"),
+            patch("pathlib.Path.exists", return_value=True),
         ):
             fetcher = BasePromptFetcher.create_fetcher(
                 FetcherType.TOPICAL_CHAT,

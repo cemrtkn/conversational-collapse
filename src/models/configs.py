@@ -1,4 +1,5 @@
 """Configuration models for drift experiments."""
+
 import logging
 from typing import List, Optional
 
@@ -11,7 +12,6 @@ from pydantic import (
 )
 
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
-from api.interp_inference import DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -202,15 +202,17 @@ class AgentConfig(BaseModel):
     """
 
     model: str = Field(
-        default=DEFAULT_MODEL,
-        description="HuggingFace model ID (e.g., 'meta-llama/Meta-Llama-3-8B-Instruct')"
+        default="meta-llama/Meta-Llama-3-8B-Instruct",
+        description="HuggingFace model ID "
+        "(e.g., 'meta-llama/Meta-Llama-3-8B-Instruct')",
     )
     device: str = Field(
         default="cuda",
         description="Device to run on ('cpu', 'cuda', etc.)",
     )
     system_prompt: Optional[str] = Field(
-        default=None, description="System prompt to guide agent behavior"
+        default=None,
+        description="System prompt to guide agent behavior",
     )
     temperature: Optional[float] = Field(default=1.0, ge=0.0, le=2.0)
     max_new_tokens: Optional[int] = Field(default=256, ge=1)

@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
 
+
 class InterpInference:
-    """LLM interface using NNsight for inference with interpretability support."""
+    """LLM interface using NNsight for inference
+    with interpretability support."""
 
     def __init__(
         self,
@@ -25,7 +27,8 @@ class InterpInference:
         """Initialize the NNsight language model.
 
         Args:
-            model: HuggingFace model identifier (e.g., "meta-llama/Meta-Llama-3-8B-Instruct")
+            model: HuggingFace model identifier
+            (e.g., "meta-llama/Meta-Llama-3-8B-Instruct")
             device: Device to run on ("cpu", "cuda", "cuda:0", etc.)
             torch_dtype: Torch dtype for model weights
             **model_kwargs: Additional kwargs passed to LanguageModel
@@ -38,7 +41,7 @@ class InterpInference:
             torch_dtype=torch_dtype,
             **model_kwargs,
         )
-        
+
         logger.info(f"Model {model} loaded successfully")
 
         self.device = device
@@ -63,11 +66,13 @@ class InterpInference:
             top_p=top_p,
             do_sample=do_sample,
             **generate_kwargs,
-        ) as tracer:
+        ) as _:
             out = self.model.generator.output.save()
 
         generated_tokens = out[0, input_len:]
-        decoded_answer = self.model.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+        decoded_answer = self.model.tokenizer.decode(
+            generated_tokens, skip_special_tokens=True
+        )
 
         return decoded_answer
 

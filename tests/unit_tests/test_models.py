@@ -5,6 +5,7 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
+from api.interp_inference import DEFAULT_MODEL
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
 from models import (
     AgentConfig,
@@ -18,7 +19,6 @@ from models import (
     Metric,
 )
 from models.api import LLMResponse
-from api.interp_inference import DEFAULT_MODEL
 
 
 class TestAnalysisResult:
