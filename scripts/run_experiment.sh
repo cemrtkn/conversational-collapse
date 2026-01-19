@@ -30,4 +30,4 @@ apptainer exec --nv \
     --env HUGGINGFACE_TOKEN="${HUGGINGFACE_TOKEN}" \
     --env HF_HUB_CACHE="/huggingface/hub" \
     "${INFERENCE_IMAGE}" \
-    python src/main.py configs/test_config.yaml
+    bash -c 'pip install --user -e "$HOME" --no-deps && python src/main.py configs/test_config.yaml'

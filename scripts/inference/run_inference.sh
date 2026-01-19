@@ -29,4 +29,4 @@ apptainer exec --nv \
     --env HUGGINGFACE_TOKEN="${HUGGINGFACE_TOKEN}" \
     --env HF_HUB_CACHE="/huggingface/hub" \
     "${INFERENCE_IMAGE}" \
-    python scripts/inference/run_inference.py
+    bash -c 'pip install --user -e "$HOME" --no-deps && python scripts/inference/run_inference.py'
