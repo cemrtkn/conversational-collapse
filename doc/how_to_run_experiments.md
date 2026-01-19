@@ -7,16 +7,20 @@
 #### 1. Command Line Interface
 ```bash
 # Basic experiment with default settings
-poetry run python src/main.py configs/test_config.yaml
+uv run python src/main.py configs/test_config.yaml
 
 # With debug logging
-poetry run python src/main.py configs/test_config.yaml --debug
+# The config defaults to configs/test_config.yaml
+sbatch scripts/run_experiment.sh debug
+
+# With custom config
+sbatch scripts/run_experiment.sh debug configs/test_config.yaml
 
 # Sequential execution (easier debugging)
-poetry run python src/main.py configs/test_config.yaml --sequential
+sbatch scripts/run_experiment.sh configs/test_config.yaml --sequential
 
 # Multiple configurations
-poetry run python src/main.py config1.yaml config2.yaml config3.yaml
+sbatch scripts/run_experiment.sh config1.yaml config2.yaml config3.yaml
 ```
 
 #### 2. Programmatic Usage
@@ -63,8 +67,7 @@ analyzer_config:
 
 # Agent configurations (can be multiple)
 agent_configs:
-  - provider: "openai"
-    model: "gpt-4-1106-preview"
+    model: "meta-llama/Meta-Llama-3-8B-Instruct"
     system_prompt: "You are a helpful assistant participating in a conversation."
     temperature: 0.7
     max_new_tokens: 150
@@ -132,63 +135,16 @@ This analyzer calculates:
 - Text coherence scores
 - Word count and uniqueness metrics
 
-#### Agent Configuration Options
-
-**OpenAI Provider:**
-```yaml
-agent_configs:
-  - provider: "openai"
-    model: "gpt-4-1106-preview"  # or "gpt-3.5-turbo", "gpt-4-turbo"
-    system_prompt: "Your system prompt here"
-    temperature: 0.7
-    max_new_tokens: 150
-    frequency_penalty: 0.0
-    presence_penalty: 0.0
-    top_p: 1.0
-```
-
-**Anthropic Provider:**
-```yaml
-agent_configs:
-  - provider: "anthropic"
-    model: "claude-3-haiku-20240307"
-    system_prompt: "Your system prompt here"
-    temperature: 0.7
-    max_new_tokens: 150
-```
-
-**Azure OpenAI Provider:**
-```yaml
-agent_configs:
-  - provider: "azure_openai"
-    model: "gpt-35-turbo"  # Your deployment name
-    system_prompt: "Your system prompt here"
-    temperature: 0.7
-    max_new_tokens: 150
-```
-
-**Ollama Provider (Local):**
-```yaml
-agent_configs:
-  - provider: "ollama"
-    model: "llama2"  # or "mistral", "codellama", etc.
-    system_prompt: "Your system prompt here"
-    temperature: 0.7
-    max_new_tokens: 150
-```
-
 #### Multi-Agent Configurations
 
 **Multiple Agents with Different Providers:**
 ```yaml
 agent_configs:
-  - provider: "openai"
-    model: "gpt-4-1106-preview"
+  - model: "meta-llama/Meta-Llama-3-8B-Instruct"
     system_prompt: "You are an optimistic conversationalist."
     temperature: 0.8
 
-  - provider: "anthropic"
-    model: "claude-3-haiku-20240307"
+  - model: "meta-llama/Llama-3.2-1B-Instruct"
     system_prompt: "You are a analytical conversationalist."
     temperature: 0.3
 

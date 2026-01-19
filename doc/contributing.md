@@ -4,7 +4,7 @@
 
 ### Prerequisites
 - Python 3.13+
-- Poetry (dependency management)
+- uv (dependency management)
 - Git
 
 ### Initial Setup
@@ -16,13 +16,12 @@
 
 2. **Install dependencies**:
    ```bash
-   poetry install
-   poetry shell
+   uv sync
    ```
 
 3. **Install pre-commit hooks**:
    ```bash
-   poetry run pre-commit install
+   uv run pre-commit install
    ```
 
 4. **Environment setup**:
@@ -97,17 +96,17 @@ tests/
 ### Running Tests
 ```bash
 # All tests
-poetry run pytest
+uv run pytest
 
 # With coverage
-poetry run coverage run -m pytest
-poetry run coverage report
-poetry run coverage html  # Generate HTML report
+uv run coverage run -m pytest
+uv run coverage report
+uv run coverage html  # Generate HTML report
 
 # Specific test types
-poetry run pytest tests/unit_tests/
-poetry run pytest tests/integration/
-poetry run pytest -k "similarity"  # Run tests matching pattern
+uv run pytest tests/unit_tests/
+uv run pytest tests/integration/
+uv run pytest -k "similarity"  # Run tests matching pattern
 ```
 
 ### Writing Tests
@@ -160,7 +159,7 @@ git commit -m "feat: add semantic similarity analyzer
 ### 2. Before Committing
 ```bash
 # Format code
-poetry pre-commit run --all-files
+pre-commit run --all-files
 ```
 
 ### 3. Pull Request Process

@@ -10,52 +10,46 @@ This project investigates whether AIs need external input to create sensible out
 
 ### Installation
 
-1. **Prerequisites**: Python 3.13+ and Poetry
+1. **Prerequisites**: Python 3.13+ and uv
 
-   **Install Poetry if needed**:
+   **Install uv if needed**:
    ```bash
    # Official installer (recommended)
-   curl -sSL https://install.python-poetry.org | python3 -
-
-   # Or via pip
-   pip install --user poetry
-
-   # Or via Homebrew (macOS)
-   brew install poetry
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
 2. **Clone and install**:
    ```bash
    # Clone the repository
    git clone <repository-url>
-   cd babel_ai
+   cd conversational-collapse
 
-   # Install dependencies using Poetry
-   poetry install
+   # Install dependencies
+   uv sync
 
    # Activate the virtual environment
-   poetry shell
+   source .venv/bin/activate
    ```
 
 3. **Set up environment** (optional):
    ```bash
-   # Create .env file for API keys if using external LLM providers
-   cp .env.example .env  # Edit with your API keys
+   # Create .env file
+   cp .env.example .env  # Edit huggingface-related info
    ```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-poetry run pytest
+uv run pytest
 
 # Run with coverage
-poetry run coverage run --source=src -m pytest
-poetry run coverage report
+uv run coverage run --source=src -m pytest
+uv run coverage report
 
 # Run specific test categories
-poetry run pytest tests/unit_tests/     # Unit tests only
-poetry run pytest tests/integration/   # Integration tests only
+uv run pytest tests/unit_tests/     # Unit tests only
+uv run pytest tests/integration/   # Integration tests only
 ```
 
 ### Quick Experiment
@@ -63,13 +57,13 @@ poetry run pytest tests/integration/   # Integration tests only
 1. **Basic experiment**:
    ```bash
    # Run with the provided test configuration
-   poetry run python src/main.py configs/test_config.yaml
+   sbatch scripts/run_experiment.sh
    ```
 
 2. **Custom experiment**:
    ```bash
    # Create your own config file (see configs/test_config.yaml as template)
-   poetry run python src/main.py your_config.yaml --debug
+   sbatch scripts/run_experiment.sh debug <path_to_new_config>
    ```
 
 3. **View results**:
@@ -80,7 +74,7 @@ poetry run pytest tests/integration/   # Integration tests only
 
 ## Key Features
 
-- **Multi-Provider Support**: OpenAI, Anthropic, Azure OpenAI, Ollama
+- **Inference Allowing Interpretability Experiments**: Built on top of NNSight
 - **Drift Analysis**: Semantic similarity, lexical analysis, perplexity metrics
 - **Data Sources**: ShareGPT, Topical Chat, Infinite Conversation datasets
 - **Configurable Experiments**: YAML-based configuration system
@@ -93,7 +87,7 @@ poetry run pytest tests/integration/   # Integration tests only
 babel_ai/
 ├── src/
 │   ├── babel_ai/          # Core experiment framework
-│   ├── api/               # LLM provider interfaces
+│   ├── api/               # LLM interface
 │   ├── models/            # Data models and configurations
 │   └── main.py            # Main experiment runner
 ├── tests/                 # Test suites
@@ -113,9 +107,7 @@ We welcome contributions! Please see [doc/contributing.md](doc/contributing.md) 
 
 ## Documentation
 
-- **[Module Guide](doc/modules.md)**: Detailed explanation of core modules
-- **[Experiments Guide](doc/experiments.md)**: How to run experiments and use notebooks
-- **[Directory Structure](doc/directory-structure.md)**: Complete project organization
+- **[Experiments Guide](doc/how_to_run_experiments.md)**: How to run experiments and use notebooks
 - **[Contributing Guide](doc/contributing.md)**: Development guidelines
 
 ## License
