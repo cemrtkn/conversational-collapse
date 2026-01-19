@@ -10,7 +10,6 @@ from pydantic import (
     model_validator,
 )
 
-from api.enums import APIModels, Provider
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
 
 logger = logging.getLogger(__name__)
@@ -173,66 +172,47 @@ class AgentConfig(BaseModel):
     """Configuration for an LLM agent used in drift experiments.
 
     This class defines the parameters for configuring an agent that will
-    generate responses during a drift experiment. It includes settings for
-    the LLM provider, model selection, and various generation parameters
-    that control the behavior and output characteristics of the agent.
+    generate responses during a drift experiment using NNsight-based
+    local inference. It includes settings for the model, device, and
+    various generation parameters.
 
     Attributes:
-        provider (Provider): The LLM provider to use (e.g., OpenAI, Ollama)
-        model (ModelType): The specific model to use from the provider
+        model_id (str): HuggingFace model identifier
+            (e.g., 'meta-llama/Llama-3.1-8B')
+        device (str): Device to run inference on ('cpu', 'cuda', etc.)
         system_prompt (Optional[str]): System prompt to guide the agent's
             behavior and responses. Default: None
         temperature (Optional[float]): Controls randomness in generation
-            (0.0-2.0). Higher values make output more random. Default: None
-        max_tokens (Optional[int]): Maximum number of tokens to generate per
-            response. Default: None
-        frequency_penalty (Optional[float]): Penalty for frequently used tokens
-            (-2.0 to 2.0). Positive values discourage repetition. Default: None
-        presence_penalty (Optional[float]): Penalty for tokens that have
-            already appeared (-2.0 to 2.0). Positive values encourage new
-            topics. Default: None
+            (0.0-2.0). Higher values make output more random. Default: 1.0
+        max_new_tokens (Optional[int]): Maximum number of tokens to generate
+            per response. Default: 256
         top_p (Optional[float]): Nucleus sampling parameter (0.0-1.0). Only
-            consider tokens with cumulative probability up to top_p. Default:
-            None
+            consider tokens with cumulative probability up to top_p.
+            Default: 1.0
 
     Example:
         >>> config = AgentConfig(
-        ...     provider=Provider.OPENAI,
-        ...     model=ModelType.GPT_3_5_TURBO,
+        ...     model_id="meta-llama/Llama-3.1-8B",
+        ...     device="cuda",
         ...     system_prompt="You are a helpful assistant.",
         ...     temperature=0.8,
-        ...     max_tokens=150,
-        ...     frequency_penalty=0.1,
-        ...     presence_penalty=0.1
+        ...     max_new_tokens=256
         ... )
     """
 
-    provider: Provider = Field(description="Name of the provider to use")
-    model: APIModels = Field(description="Name of the model to use")
+    model_id: str = Field(
+        description="HuggingFace model ID (e.g., 'meta-llama/Llama-3.1-8B')"
+    )
+    device: str = Field(
+        default="cuda",
+        description="Device to run on ('cpu', 'cuda', etc.)",
+    )
     system_prompt: Optional[str] = Field(
         default=None, description="System prompt to guide agent behavior"
     )
     temperature: Optional[float] = Field(default=1.0, ge=0.0, le=2.0)
-    max_tokens: Optional[int] = Field(default=None, ge=1)
-    frequency_penalty: Optional[float] = Field(default=0.0, ge=-2.0, le=2.0)
-    presence_penalty: Optional[float] = Field(default=0.0, ge=-2.0, le=2.0)
+    max_new_tokens: Optional[int] = Field(default=256, ge=1)
     top_p: Optional[float] = Field(default=1.0, ge=0.0, le=1.0)
-
-    @field_validator("model", mode="after")
-    def validate_model_provider_compatibility(
-        cls, v: APIModels, values: ValidationInfo
-    ) -> APIModels:
-        """Validate that the model is compatible with the provider."""
-        provider = values.data["provider"]
-        expected_model_enum = provider.get_model_enum()
-
-        if not isinstance(v, expected_model_enum):
-            raise ValueError(
-                f"Model {v} is not compatible with provider {provider}. "
-                f"Expected model type: {expected_model_enum.__name__}"
-            )
-
-        return v
 
 
 class ExperimentConfig(BaseModel):
@@ -267,13 +247,13 @@ class ExperimentConfig(BaseModel):
         ...     ),
         ...     agent_configs=[
         ...         AgentConfig(
-        ...             provider=Provider.OPENAI,
-        ...             model=ModelType.GPT_3_5_TURBO,
+        ...             model_id="meta-llama/Llama-3.1-8B",
+        ...             device="cuda",
         ...             temperature=0.7
         ...         ),
         ...         AgentConfig(
-        ...             provider=Provider.OLLAMA,
-        ...             model=ModelType.LLAMA2_7B,
+        ...             model_id="mistralai/Mistral-7B-Instruct-v0.2",
+        ...             device="cuda",
         ...             temperature=0.8
         ...         )
         ...     ],

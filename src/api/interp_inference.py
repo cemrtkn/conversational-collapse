@@ -1,7 +1,7 @@
 """NNsight-based LLM interface for interpretability experiments."""
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import torch
 from nnsight import LanguageModel
@@ -18,7 +18,6 @@ class InterpInference:
         self,
         model_id: str,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-        remote: bool = False,
         torch_dtype: torch.dtype = torch.float16,
         **model_kwargs,
     ):
@@ -27,13 +26,11 @@ class InterpInference:
         Args:
             model_id: HuggingFace model identifier (e.g., "meta-llama/Llama-3.1-8B")
             device: Device to run on ("cpu", "cuda", "cuda:0", etc.)
-            remote: Whether to use NDIF remote execution
             torch_dtype: Torch dtype for model weights
             **model_kwargs: Additional kwargs passed to LanguageModel
         """
         self.model_id = model_id
         self.device = device
-        self.remote = remote
 
         logger.info(f"Loading NNsight model: {model_id} on {device}")
 
@@ -53,34 +50,26 @@ class InterpInference:
         temperature: float = 1.0,
         top_p: float = 1.0,
         do_sample: bool = True,
+        input_len: int = None,
         **generate_kwargs,
     ) -> str:
-        """Generate text from a single prompt.
-
-        Args:
-            prompt: Input text prompt
-            max_new_tokens: Maximum tokens to generate
-            temperature: Sampling temperature
-            top_p: Top-p (nucleus) sampling parameter
-            do_sample: Whether to use sampling (vs greedy)
-            **generate_kwargs: Additional generation kwargs
-
-        Returns:
-            Generated text string
-        """
+        """Generate text from a single prompt."""
         logger.debug(f"Generating with prompt: {prompt[:50]}...")
 
-        output = self.model.generate(
+        with self.model.generate(
             prompt,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
             do_sample=do_sample,
-            remote=self.remote,
             **generate_kwargs,
-        )
+        ) as tracer:
+            out = self.model.generator.output.save()
 
-        return output
+        generated_tokens = out[0, input_len:]
+        decoded_answer = self.model.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+
+        return decoded_answer
 
     def generate_from_messages(
         self,
@@ -125,6 +114,7 @@ class InterpInference:
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
+            input_len=input_token_count,
             **generate_kwargs,
         )
 

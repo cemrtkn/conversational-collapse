@@ -1,29 +1,28 @@
-"""Agent for generating responses using various LLM providers."""
+"""Agent for generating responses using NNsight-based local inference."""
 
 import itertools
 import logging
 import uuid
 from typing import Dict, Generator, List
 
-from api.llm_interface import LLMInterface
+from api.interp_inference import InterpInference
 from models import AgentConfig
 
 logger = logging.getLogger(__name__)
 
 
 class Agent:
-    """An agent that generates responses using configured parameters."""
+    """An agent that generates responses using NNsight-based local inference."""
 
     def __init__(self, agent_config: AgentConfig):
         """Initialize the Agent with configuration.
 
         Args:
-            agent_config: Configuration containing provider, model,
+            agent_config: Configuration containing model_id, device,
                          and generation parameters
         """
         self.id = uuid.uuid4()
-        self.provider = agent_config.provider
-        self.model = agent_config.model
+        self.model_id = agent_config.model_id
         self.system_prompt = agent_config.system_prompt
         self.config: AgentConfig = agent_config
         # TODO: Make this configurable
@@ -33,10 +32,16 @@ class Agent:
         # agent types.
         self.is_conversational_agent = True
 
+        # Initialize InterpInference model
+        self.interp_model = InterpInference(
+            model_id=agent_config.model_id,
+            device=agent_config.device,
+        )
+
         logger.info(
             f"Agent {self.id} initialized "
-            f"with provider {self.provider.value}, "
-            f"model {self.model.value}, "
+            f"with model {self.model_id}, "
+            f"device {agent_config.device}, "
             f"and system prompt {self.system_prompt}"
         )
         logger.debug(f"Agent {self.id} config: {self.config.model_dump()}")
@@ -80,16 +85,13 @@ class Agent:
 
         logger.debug(f"Agent {self.id} final messages: {final_messages}")
 
-        return LLMInterface.generate_response(
+        response = self.interp_model.generate_from_messages(
             messages=final_messages,
-            provider=self.provider,
-            model=self.model,
+            max_new_tokens=self.config.max_new_tokens,
             temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
-            frequency_penalty=self.config.frequency_penalty,
-            presence_penalty=self.config.presence_penalty,
             top_p=self.config.top_p,
         )
+        return response.content
 
     @staticmethod
     def _define_msg_tree(

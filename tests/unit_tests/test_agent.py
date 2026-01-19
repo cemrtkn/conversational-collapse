@@ -1,24 +1,22 @@
 """Tests for the Agent class."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from api.enums import OpenAIModels, Provider
 from babel_ai.agent import Agent
 from models import AgentConfig
+from models.api import LLMResponse
 
 
 @pytest.fixture
 def sample_agent_config():
     """Create a sample AgentConfig for testing."""
     return AgentConfig(
-        provider=Provider.OPENAI,
-        model=OpenAIModels.GPT4_1106_PREVIEW,
+        model_id="meta-llama/Llama-3.1-8B",
+        device="cpu",
         temperature=0.8,
-        max_tokens=150,
-        frequency_penalty=0.2,
-        presence_penalty=0.1,
+        max_new_tokens=150,
         top_p=0.9,
     )
 
@@ -36,32 +34,41 @@ def sample_messages():
 class TestAgent:
     """Test the Agent class."""
 
-    def test_agent_initialization(self, sample_agent_config):
+    @patch("babel_ai.agent.InterpInference")
+    def test_agent_initialization(
+        self, mock_interp_inference, sample_agent_config
+    ):
         """Test that Agent initializes correctly with AgentConfig."""
         agent = Agent(sample_agent_config)
 
         # Config attributes
         assert agent.config == sample_agent_config
-        assert agent.config.provider == Provider.OPENAI
-        assert agent.config.model == OpenAIModels.GPT4_1106_PREVIEW
+        assert agent.config.model_id == "meta-llama/Llama-3.1-8B"
+        assert agent.config.device == "cpu"
         assert agent.config.system_prompt is None
         assert agent.config.temperature == 0.8
-        assert agent.config.max_tokens == 150
-        assert agent.config.frequency_penalty == 0.2
-        assert agent.config.presence_penalty == 0.1
+        assert agent.config.max_new_tokens == 150
         assert agent.config.top_p == 0.9
 
-        # Explicite attributes
+        # Explicit attributes
         assert agent.id is not None
-        assert agent.provider == Provider.OPENAI
-        assert agent.model == OpenAIModels.GPT4_1106_PREVIEW
+        assert agent.model_id == "meta-llama/Llama-3.1-8B"
         assert agent.system_prompt is None
 
-    def test_agent_initialization_with_system_prompt(self):
+        # Verify InterpInference was initialized correctly
+        mock_interp_inference.assert_called_once_with(
+            model_id="meta-llama/Llama-3.1-8B",
+            device="cpu",
+        )
+
+    @patch("babel_ai.agent.InterpInference")
+    def test_agent_initialization_with_system_prompt(
+        self, mock_interp_inference
+    ):
         """Test that Agent initializes correctly with system prompt."""
         config = AgentConfig(
-            provider=Provider.OPENAI,
-            model=OpenAIModels.GPT4_1106_PREVIEW,
+            model_id="meta-llama/Llama-3.1-8B",
+            device="cpu",
             system_prompt="You are a helpful assistant.",
             temperature=0.0,
         )
@@ -71,42 +78,50 @@ class TestAgent:
         assert agent.system_prompt == "You are a helpful assistant."
         assert agent.config.system_prompt == "You are a helpful assistant."
 
-    @patch("babel_ai.agent.LLMInterface.generate_response")
-    def test_generate_response_calls_api(
-        self, mock_generate_response, sample_agent_config, sample_messages
+    @patch("babel_ai.agent.InterpInference")
+    def test_generate_response_calls_model(
+        self, mock_interp_class, sample_agent_config, sample_messages
     ):
         """Test that generate_response calls
-        the API with correct parameters."""
-        mock_generate_response.return_value = "Test response from API"
+        the model with correct parameters."""
+        # Setup mock
+        mock_interp_instance = MagicMock()
+        mock_interp_class.return_value = mock_interp_instance
+        mock_interp_instance.generate_from_messages.return_value = LLMResponse(
+            content="Test response from model",
+            input_token_count=10,
+            output_token_count=5,
+        )
 
         agent = Agent(sample_agent_config)
         response = agent.generate_response(sample_messages)
 
         # Verify the response
-        assert response == "Test response from API"
+        assert response == "Test response from model"
 
-        # Verify generate_response was called with correct parameters
-        mock_generate_response.assert_called_once_with(
+        # Verify generate_from_messages was called with correct parameters
+        mock_interp_instance.generate_from_messages.assert_called_once_with(
             messages=sample_messages,
-            provider=Provider.OPENAI,
-            model=OpenAIModels.GPT4_1106_PREVIEW,
+            max_new_tokens=150,
             temperature=0.8,
-            max_tokens=150,
-            frequency_penalty=0.2,
-            presence_penalty=0.1,
             top_p=0.9,
         )
 
-    @patch("babel_ai.agent.LLMInterface.generate_response")
-    def test_generate_response_with_system_prompt(
-        self, mock_generate_response
-    ):
+    @patch("babel_ai.agent.InterpInference")
+    def test_generate_response_with_system_prompt(self, mock_interp_class):
         """Test generate_response with system prompt."""
-        mock_generate_response.return_value = "Test response"
+        # Setup mock
+        mock_interp_instance = MagicMock()
+        mock_interp_class.return_value = mock_interp_instance
+        mock_interp_instance.generate_from_messages.return_value = LLMResponse(
+            content="Test response",
+            input_token_count=10,
+            output_token_count=5,
+        )
 
         config = AgentConfig(
-            provider=Provider.OPENAI,
-            model=OpenAIModels.GPT4_1106_PREVIEW,
+            model_id="meta-llama/Llama-3.1-8B",
+            device="cpu",
             system_prompt="You are a helpful assistant.",
             temperature=0.7,
         )
@@ -118,32 +133,33 @@ class TestAgent:
         # Verify response
         assert response == "Test response"
 
-        # Verify generate_response was called with system prompt prepended
+        # Verify generate_from_messages was called with system prompt prepended
         expected_messages = [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "Hello"},
         ]
-        mock_generate_response.assert_called_once_with(
+        mock_interp_instance.generate_from_messages.assert_called_once_with(
             messages=expected_messages,
-            provider=Provider.OPENAI,
-            model=OpenAIModels.GPT4_1106_PREVIEW,
+            max_new_tokens=256,
             temperature=0.7,
-            max_tokens=None,
-            frequency_penalty=0.0,
-            presence_penalty=0.0,
             top_p=1.0,
         )
 
-    @patch("babel_ai.agent.LLMInterface.generate_response")
-    def test_generate_response_without_system_prompt(
-        self, mock_generate_response
-    ):
+    @patch("babel_ai.agent.InterpInference")
+    def test_generate_response_without_system_prompt(self, mock_interp_class):
         """Test generate_response without system prompt."""
-        mock_generate_response.return_value = "Test response"
+        # Setup mock
+        mock_interp_instance = MagicMock()
+        mock_interp_class.return_value = mock_interp_instance
+        mock_interp_instance.generate_from_messages.return_value = LLMResponse(
+            content="Test response",
+            input_token_count=10,
+            output_token_count=5,
+        )
 
         config = AgentConfig(
-            provider=Provider.OPENAI,
-            model=OpenAIModels.GPT4_1106_PREVIEW,
+            model_id="meta-llama/Llama-3.1-8B",
+            device="cpu",
             # No system_prompt
             temperature=0.7,
         )
@@ -155,15 +171,11 @@ class TestAgent:
         # Verify response
         assert response == "Test response"
 
-        # Verify generate_response was called with original messages unchanged
-        mock_generate_response.assert_called_once_with(
+        # Verify generate_from_messages was called with original messages
+        mock_interp_instance.generate_from_messages.assert_called_once_with(
             messages=messages,  # No system prompt added
-            provider=Provider.OPENAI,
-            model=OpenAIModels.GPT4_1106_PREVIEW,
+            max_new_tokens=256,
             temperature=0.7,
-            max_tokens=None,
-            frequency_penalty=0.0,
-            presence_penalty=0.0,
             top_p=1.0,
         )
 
