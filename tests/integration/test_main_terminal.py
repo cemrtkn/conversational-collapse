@@ -15,19 +15,20 @@ def temp_config_file():
     # Minimal config content
     config_content = f"""
 fetcher_config:
-  fetcher: "random"
-  category: "creative"
+  fetcher: "sharegpt"
+  data_path: "data/sharegpt_sample.json"
+  min_messages: 2
+  max_messages: 10
 
 analyzer_config:
   analyzer: "similarity"
   analyze_window: 1
 
 agent_configs:
-  - provider: "openai"
-    model: "gpt-4-1106-preview"
+  - model: "meta-llama/Meta-Llama-3-8B-Instruct"
     system_prompt: "You are a helpful assistant."
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
 
 agent_selection_method: "round_robin"
 max_iterations: 1

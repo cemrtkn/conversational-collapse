@@ -28,7 +28,7 @@ def sample_agent_config():
     return AgentConfig(
         model=DEFAULT_MODEL,
         temperature=0.8,
-        max_tokens=150,
+        max_new_tokens=150,
         frequency_penalty=0.2,
         presence_penalty=0.1,
         top_p=0.9,

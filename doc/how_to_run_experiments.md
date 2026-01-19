@@ -67,7 +67,7 @@ agent_configs:
     model: "gpt-4-1106-preview"
     system_prompt: "You are a helpful assistant participating in a conversation."
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
     frequency_penalty: 0.0
     presence_penalty: 0.0
     top_p: 1.0
@@ -141,7 +141,7 @@ agent_configs:
     model: "gpt-4-1106-preview"  # or "gpt-3.5-turbo", "gpt-4-turbo"
     system_prompt: "Your system prompt here"
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
     frequency_penalty: 0.0
     presence_penalty: 0.0
     top_p: 1.0
@@ -154,7 +154,7 @@ agent_configs:
     model: "claude-3-haiku-20240307"
     system_prompt: "Your system prompt here"
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
 ```
 
 **Azure OpenAI Provider:**
@@ -164,7 +164,7 @@ agent_configs:
     model: "gpt-35-turbo"  # Your deployment name
     system_prompt: "Your system prompt here"
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
 ```
 
 **Ollama Provider (Local):**
@@ -174,7 +174,7 @@ agent_configs:
     model: "llama2"  # or "mistral", "codellama", etc.
     system_prompt: "Your system prompt here"
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
 ```
 
 #### Multi-Agent Configurations

@@ -19,7 +19,7 @@ agent_configs:
     system_prompt: "You are a helpful assistant participating in a
       conversation."
     temperature: 0.7
-    max_tokens: 150
+    max_new_tokens: 150
     frequency_penalty: 0.0
     presence_penalty: 0.0
     top_p: 1.0

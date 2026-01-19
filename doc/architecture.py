@@ -68,7 +68,7 @@ class AgentConfig(BaseModel):
     provider: str
     model: str
     temperature: float
-    max_tokens: int
+    max_new_tokens: int
     frequency_penalty: float
     presence_penalty: float
     top_p: float

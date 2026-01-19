@@ -30,9 +30,6 @@ class InterpInference:
             torch_dtype: Torch dtype for model weights
             **model_kwargs: Additional kwargs passed to LanguageModel
         """
-        self.model = model
-        self.device = device
-
         logger.info(f"Loading NNsight model: {model} on {device}")
 
         self.model = LanguageModel(
@@ -41,8 +38,10 @@ class InterpInference:
             torch_dtype=torch_dtype,
             **model_kwargs,
         )
-
+        
         logger.info(f"Model {model} loaded successfully")
+
+        self.device = device
 
     def generate(
         self,

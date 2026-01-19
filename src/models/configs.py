@@ -11,6 +11,7 @@ from pydantic import (
 )
 
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
+from api.interp_inference import DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -201,6 +202,7 @@ class AgentConfig(BaseModel):
     """
 
     model: str = Field(
+        default=DEFAULT_MODEL,
         description="HuggingFace model ID (e.g., 'meta-llama/Meta-Llama-3-8B-Instruct')"
     )
     device: str = Field(
@@ -212,6 +214,8 @@ class AgentConfig(BaseModel):
     )
     temperature: Optional[float] = Field(default=1.0, ge=0.0, le=2.0)
     max_new_tokens: Optional[int] = Field(default=256, ge=1)
+    frequency_penalty: Optional[float] = Field(default=0.0, ge=0.0, le=2.0)
+    presence_penalty: Optional[float] = Field(default=0.0, ge=0.0, le=2.0)
     top_p: Optional[float] = Field(default=1.0, ge=0.0, le=1.0)
 
 

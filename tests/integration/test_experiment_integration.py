@@ -9,11 +9,10 @@ import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from api.enums import OpenAIModels, Provider
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
 from babel_ai.experiment import Experiment
 from models import (
@@ -24,11 +23,14 @@ from models import (
     FetcherConfig,
     FetcherMetric,
 )
+from models.api import LLMResponse
+from api.interp_inference import DEFAULT_MODEL
 
 
 @pytest.fixture
 def test_sharegpt_data():
     """Create test ShareGPT data file."""
+    # ... existing code (unchanged) ...
     test_data = [
         {
             "items": [
@@ -76,8 +78,8 @@ def fetcher_config(test_sharegpt_data):
 @pytest.fixture
 def agent_config():
     return AgentConfig(
-        provider=Provider.OPENAI,
-        model=OpenAIModels.GPT4_0125_PREVIEW,
+        model=DEFAULT_MODEL,
+        device="cpu",  # Use CPU for testing
         temperature=0.7,
     )
 
@@ -104,35 +106,28 @@ def integration_experiment_config(fetcher_config, agent_config):
 class TestExperimentIntegration:
     """Integration tests for the Experiment class."""
 
-    @patch("api.openai.openai_request")
-    @patch("api.azure_openai.azure_openai_request")
-    @patch("api.ollama.ollama_request")
-    @patch("api.ollama.raven_ollama_request")
+    @patch("babel_ai.agent.InterpInference")
     def test_full_experiment_workflow(
         self,
-        mock_raven_request,
-        mock_ollama_request,
-        mock_azure_request,
-        mock_openai_request,
+        mock_interp_class,
         integration_experiment_config,
         fetcher_config,
         agent_config,
         tmp_path,
     ):
         """Test the complete experiment workflow end-to-end."""
-        # Setup API mocks to return realistic responses
-        mock_openai_request.return_value = (
-            "This is a test response from the OpenAI API. "
+        # Setup mock InterpInference to return realistic responses
+        mock_interp_instance = MagicMock()
+        mock_interp_class.return_value = mock_interp_instance
+        
+        test_response_content = (
+            "This is a test response from the NNsight model. "
             "It contains some realistic content for testing purposes."
         )
-        mock_azure_request.return_value = (
-            "Azure response for testing integration."
-        )
-        mock_ollama_request.return_value = (
-            "Ollama response for integration testing."
-        )
-        mock_raven_request.return_value = (
-            "Raven response for integration testing."
+        mock_interp_instance.generate_from_messages.return_value = LLMResponse(
+            content=test_response_content,
+            input_token_count=50,
+            output_token_count=20,
         )
 
         # Set output directory to temp path
@@ -167,20 +162,24 @@ class TestExperimentIntegration:
                 "No problem! Is there anything else I can help?",
             ]
             assert metric.fetcher_config == fetcher_config
-            # assert metric.analysis is not None
 
         # Verify agent metrics have correct data
         for metric in agent_metrics:
             assert metric.iteration >= len(fetcher_metrics)
             assert isinstance(metric.timestamp, datetime)
             assert metric.agent_id is not None
-            assert metric.content == mock_openai_request.return_value
+            assert metric.content == test_response_content
             assert len(metric.content) > 0
             assert metric.agent_config == agent_config
-            # assert metric.analysis is not None
 
-        # Verify API was called correctly
-        mock_openai_request.assert_called()
+        # Verify InterpInference was initialized correctly
+        mock_interp_class.assert_called_with(
+            model=DEFAULT_MODEL,
+            device="cpu",
+        )
+        
+        # Verify generate_from_messages was called
+        mock_interp_instance.generate_from_messages.assert_called()
 
         # Cleanup
         Path(fetcher_config.data_path).unlink()

@@ -496,8 +496,9 @@ class TestAgentConfig:
         )
         assert config.model == DEFAULT_MODEL
         assert config.system_prompt is None
+        assert config.device == "cuda"
         assert config.temperature == 1.0
-        assert config.max_tokens is None
+        assert config.max_new_tokens == 256
         assert config.frequency_penalty == 0.0
         assert config.presence_penalty == 0.0
         assert config.top_p == 1.0
@@ -508,18 +509,20 @@ class TestAgentConfig:
             model=DEFAULT_MODEL,
             system_prompt="You are a helpful assistant",
             temperature=0.8,
-            max_tokens=150,
+            max_new_tokens=150,
             frequency_penalty=0.5,
             presence_penalty=0.3,
             top_p=0.9,
+            device="cpu",
         )
         assert config.model == DEFAULT_MODEL
         assert config.system_prompt == "You are a helpful assistant"
         assert config.temperature == 0.8
-        assert config.max_tokens == 150
+        assert config.max_new_tokens == 150
         assert config.frequency_penalty == 0.5
         assert config.presence_penalty == 0.3
         assert config.top_p == 0.9
+        assert config.device == "cpu"
 
     def test_invalid_temperature(self):
         """Test that temperature validation works correctly."""
@@ -535,12 +538,12 @@ class TestAgentConfig:
                 temperature=-0.1,  # Invalid: < 0.0
             )
 
-    def test_invalid_max_tokens(self):
-        """Test that max_tokens validation works correctly."""
+    def test_invalid_max_new_tokens(self):
+        """Test that max_new_tokens validation works correctly."""
         with pytest.raises(ValidationError):
             AgentConfig(
                 model=DEFAULT_MODEL,
-                max_tokens=0,  # Invalid: < 1
+                max_new_tokens=0,  # Invalid: < 1
             )
 
     def test_invalid_frequency_penalty(self):
@@ -919,9 +922,10 @@ class TestAgentMetric:
         assert result["agent_id"] == "agent_1"
         assert result["agent_config"] == {
             "model": DEFAULT_MODEL,
+            "device": "cuda",
             "system_prompt": None,
             "temperature": 0.8,
-            "max_tokens": None,
+            "max_new_tokens": 256,
             "frequency_penalty": 0.0,
             "presence_penalty": 0.0,
             "top_p": 1.0,

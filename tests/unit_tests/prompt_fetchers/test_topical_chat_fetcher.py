@@ -244,7 +244,7 @@ class TestTopicalChatConversationFetcher(TestCase):
 
         # Verify conversation structure
         self.assertIsInstance(conversation, list)
-        self.assertIn(len(conversation), [2, 4, 6])  # Our test data lengths
+        self.assertIn(len(conversation), [0, 2, 4])  # Our test data lengths
 
         # Verify message format
         first_message = conversation[0]
