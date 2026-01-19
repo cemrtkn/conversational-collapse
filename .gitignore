@@ -239,7 +239,6 @@ pyrightconfig.json
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
-[Ss]cripts
 pyvenv.cfg
 pip-selfcheck.json
 
@@ -305,3 +304,5 @@ data/
 
 # logs
 logs/
+*.sif
+results/
