@@ -6,7 +6,6 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from api.enums import OpenAIModels, Provider
 from babel_ai.agent import Agent
 from babel_ai.analyzer import Analyzer
 from babel_ai.enums import AgentSelectionMethod, AnalyzerType, FetcherType
@@ -21,14 +20,13 @@ from models import (
     FetcherConfig,
     FetcherMetric,
 )
-
+from api.interp_inference import DEFAULT_MODEL
 
 @pytest.fixture
 def sample_agent_config():
     """Create a sample AgentConfig for testing."""
     return AgentConfig(
-        provider=Provider.OPENAI,
-        model=OpenAIModels.GPT4_1106_PREVIEW,
+        model=DEFAULT_MODEL,
         temperature=0.8,
         max_tokens=150,
         frequency_penalty=0.2,

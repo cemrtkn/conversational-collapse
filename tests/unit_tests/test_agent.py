@@ -7,13 +7,14 @@ import pytest
 from babel_ai.agent import Agent
 from models import AgentConfig
 from models.api import LLMResponse
+from api.interp_inference import DEFAULT_MODEL
 
 
 @pytest.fixture
 def sample_agent_config():
     """Create a sample AgentConfig for testing."""
     return AgentConfig(
-        model_id="meta-llama/Llama-3.1-8B",
+        model=DEFAULT_MODEL,
         device="cpu",
         temperature=0.8,
         max_new_tokens=150,
@@ -43,7 +44,7 @@ class TestAgent:
 
         # Config attributes
         assert agent.config == sample_agent_config
-        assert agent.config.model_id == "meta-llama/Llama-3.1-8B"
+        assert agent.config.model == DEFAULT_MODEL
         assert agent.config.device == "cpu"
         assert agent.config.system_prompt is None
         assert agent.config.temperature == 0.8
@@ -52,12 +53,12 @@ class TestAgent:
 
         # Explicit attributes
         assert agent.id is not None
-        assert agent.model_id == "meta-llama/Llama-3.1-8B"
+        assert agent.model == DEFAULT_MODEL
         assert agent.system_prompt is None
 
         # Verify InterpInference was initialized correctly
         mock_interp_inference.assert_called_once_with(
-            model_id="meta-llama/Llama-3.1-8B",
+            model=DEFAULT_MODEL,
             device="cpu",
         )
 
@@ -67,7 +68,7 @@ class TestAgent:
     ):
         """Test that Agent initializes correctly with system prompt."""
         config = AgentConfig(
-            model_id="meta-llama/Llama-3.1-8B",
+            model=DEFAULT_MODEL,
             device="cpu",
             system_prompt="You are a helpful assistant.",
             temperature=0.0,
@@ -120,7 +121,7 @@ class TestAgent:
         )
 
         config = AgentConfig(
-            model_id="meta-llama/Llama-3.1-8B",
+            model=DEFAULT_MODEL,
             device="cpu",
             system_prompt="You are a helpful assistant.",
             temperature=0.7,
@@ -158,7 +159,7 @@ class TestAgent:
         )
 
         config = AgentConfig(
-            model_id="meta-llama/Llama-3.1-8B",
+            model=DEFAULT_MODEL,
             device="cpu",
             # No system_prompt
             temperature=0.7,

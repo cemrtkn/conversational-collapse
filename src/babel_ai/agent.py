@@ -18,11 +18,11 @@ class Agent:
         """Initialize the Agent with configuration.
 
         Args:
-            agent_config: Configuration containing model_id, device,
+            agent_config: Configuration containing model, device,
                          and generation parameters
         """
         self.id = uuid.uuid4()
-        self.model_id = agent_config.model_id
+        self.model = agent_config.model
         self.system_prompt = agent_config.system_prompt
         self.config: AgentConfig = agent_config
         # TODO: Make this configurable
@@ -34,13 +34,13 @@ class Agent:
 
         # Initialize InterpInference model
         self.interp_model = InterpInference(
-            model_id=agent_config.model_id,
+            model=agent_config.model,
             device=agent_config.device,
         )
 
         logger.info(
             f"Agent {self.id} initialized "
-            f"with model {self.model_id}, "
+            f"with model {self.model}, "
             f"device {agent_config.device}, "
             f"and system prompt {self.system_prompt}"
         )

@@ -10,13 +10,14 @@ from models.api import LLMResponse
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
 
 class InterpInference:
     """LLM interface using NNsight for inference with interpretability support."""
 
     def __init__(
         self,
-        model_id: str,
+        model: str,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         torch_dtype: torch.dtype = torch.float16,
         **model_kwargs,
@@ -24,24 +25,24 @@ class InterpInference:
         """Initialize the NNsight language model.
 
         Args:
-            model_id: HuggingFace model identifier (e.g., "meta-llama/Llama-3.1-8B")
+            model: HuggingFace model identifier (e.g., "meta-llama/Meta-Llama-3-8B-Instruct")
             device: Device to run on ("cpu", "cuda", "cuda:0", etc.)
             torch_dtype: Torch dtype for model weights
             **model_kwargs: Additional kwargs passed to LanguageModel
         """
-        self.model_id = model_id
+        self.model = model
         self.device = device
 
-        logger.info(f"Loading NNsight model: {model_id} on {device}")
+        logger.info(f"Loading NNsight model: {model} on {device}")
 
         self.model = LanguageModel(
-            model_id,
+            model,
             device_map=device if device != "cpu" else None,
             torch_dtype=torch_dtype,
             **model_kwargs,
         )
 
-        logger.info(f"Model {model_id} loaded successfully")
+        logger.info(f"Model {model} loaded successfully")
 
     def generate(
         self,

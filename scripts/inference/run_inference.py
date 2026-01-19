@@ -1,8 +1,8 @@
 from api.interp_inference import InterpInference
+from api.interp_inference import DEFAULT_MODEL
 
 def main():
-    model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-    inference = InterpInference(model_id=model_id)
+    inference = InterpInference(model=DEFAULT_MODEL)
 
     response = inference.generate_from_messages(
         messages=[

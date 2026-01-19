@@ -177,8 +177,8 @@ class AgentConfig(BaseModel):
     various generation parameters.
 
     Attributes:
-        model_id (str): HuggingFace model identifier
-            (e.g., 'meta-llama/Llama-3.1-8B')
+        model (str): HuggingFace model identifier
+            (e.g., 'meta-llama/Meta-Llama-3-8B-Instruct')
         device (str): Device to run inference on ('cpu', 'cuda', etc.)
         system_prompt (Optional[str]): System prompt to guide the agent's
             behavior and responses. Default: None
@@ -192,7 +192,7 @@ class AgentConfig(BaseModel):
 
     Example:
         >>> config = AgentConfig(
-        ...     model_id="meta-llama/Llama-3.1-8B",
+        ...     model="meta-llama/Meta-Llama-3-8B-Instruct",
         ...     device="cuda",
         ...     system_prompt="You are a helpful assistant.",
         ...     temperature=0.8,
@@ -200,8 +200,8 @@ class AgentConfig(BaseModel):
         ... )
     """
 
-    model_id: str = Field(
-        description="HuggingFace model ID (e.g., 'meta-llama/Llama-3.1-8B')"
+    model: str = Field(
+        description="HuggingFace model ID (e.g., 'meta-llama/Meta-Llama-3-8B-Instruct')"
     )
     device: str = Field(
         default="cuda",
@@ -247,12 +247,12 @@ class ExperimentConfig(BaseModel):
         ...     ),
         ...     agent_configs=[
         ...         AgentConfig(
-        ...             model_id="meta-llama/Llama-3.1-8B",
+        ...             model="meta-llama/Meta-Llama-3-8B-Instruct",
         ...             device="cuda",
         ...             temperature=0.7
         ...         ),
         ...         AgentConfig(
-        ...             model_id="mistralai/Mistral-7B-Instruct-v0.2",
+        ...             model="mistralai/Mistral-7B-Instruct-v0.2",
         ...             device="cuda",
         ...             temperature=0.8
         ...         )
