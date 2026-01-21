@@ -1,7 +1,7 @@
 """NNsight-based LLM interface for interpretability experiments."""
 
 import logging
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 import torch
 from nnsight import LanguageModel
@@ -54,6 +54,7 @@ class InterpInference:
         top_p: float = 1.0,
         do_sample: bool = True,
         input_len: int = None,
+        intervention: Callable = None,
         **generate_kwargs,
     ) -> str:
         """Generate text from a single prompt."""
@@ -66,15 +67,22 @@ class InterpInference:
             top_p=top_p,
             do_sample=do_sample,
             **generate_kwargs,
-        ) as _:
+        ) as tracer:
+            logits = list().save()
+
+            # Iterate over all generation steps
+            with tracer.iter[:]:
+                logits.append(intervention(self.model))
+
             out = self.model.generator.output.save()
 
         generated_tokens = out[0, input_len:]
         decoded_answer = self.model.tokenizer.decode(
             generated_tokens, skip_special_tokens=True
         )
+        intervention_output = {"logits": logits}
 
-        return decoded_answer
+        return decoded_answer, intervention_output
 
     def generate_from_messages(
         self,
@@ -82,6 +90,7 @@ class InterpInference:
         max_new_tokens: int = 256,
         temperature: float = 1.0,
         top_p: float = 1.0,
+        intervention: Callable = None,
         **generate_kwargs,
     ) -> LLMResponse:
         """Generate response from chat messages.
@@ -114,12 +123,13 @@ class InterpInference:
         input_token_count = input_ids["input_ids"].shape[1]
 
         # Generate
-        output = self.generate(
+        output, intervention_output = self.generate(
             prompt=prompt,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
             input_len=input_token_count,
+            intervention=intervention,
             **generate_kwargs,
         )
 
@@ -133,6 +143,7 @@ class InterpInference:
             content=output,
             input_token_count=input_token_count,
             output_token_count=output_token_count,
+            intervention_output=intervention_output,
         )
 
     @property
