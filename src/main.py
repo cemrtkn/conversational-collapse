@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 import logging
 import os
 from datetime import datetime
@@ -52,19 +51,18 @@ def setup_logging(log_file: str = None, debug: bool = False):
         logger.info(f"Log file: {log_file}")
 
 
-async def run_experiment(config: ExperimentConfig):
+def run_experiment(config: ExperimentConfig):
     """Run a single experiment and log its results."""
     experiment = Experiment(config)
     logger.info("Starting experiment thread.")
-    await asyncio.to_thread(experiment.run)
+    experiment.run()
 
 
-async def run_experiment_batch(
+def run_experiment_batch(
     configs: List[ExperimentConfig],
-    parallel: bool = True,
     debug: bool = False,
 ):
-    """Run multiple experiments in parallel using asyncio."""
+    """Run multiple experiments sequentially."""
 
     # Ensure logs directory exists
     os.makedirs("logs", exist_ok=True)
@@ -80,23 +78,14 @@ async def run_experiment_batch(
         debug=debug,
     )
 
-    if parallel:
-        # Run experiments in parallel
-        logger.info(f"Running {len(configs)} experiments in parallel.")
-        for i, config in enumerate(configs):
-            logger.debug(
-                f"Running experiment {i} with config: {config.model_dump()}"
-            )
-        await asyncio.gather(*(run_experiment(config) for config in configs))
-    else:
-        # Run experiments sequentially
-        logger.info(f"Running {len(configs)} experiments sequentially.")
-        for i, config in enumerate(configs):
-            logger.info(
-                f"Running experiment {i} with config: {config.model_dump()}"
-            )
-            await run_experiment(config)
-            logger.info(f"Experiment {i} completed")
+    # Run experiments sequentially
+    logger.info(f"Running {len(configs)} experiments sequentially.")
+    for i, config in enumerate(configs):
+        logger.info(
+            f"Running experiment {i} with config: {config.model_dump()}"
+        )
+        run_experiment(config)
+        logger.info(f"Experiment {i} completed")
 
     logging.info("All experiments completed.")
 
@@ -110,12 +99,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging"
     )
-    parser.add_argument(
-        "--sequential",
-        action="store_true",
-        help="Run experiments sequentially instead of parallel",
-    )
-
     args = parser.parse_args()
 
     # Set up basic console logging for startup
@@ -127,8 +110,4 @@ if __name__ == "__main__":
         config = load_yaml_config(ExperimentConfig, config_path)
         example_configs.append(config)
 
-    asyncio.run(
-        run_experiment_batch(
-            example_configs, parallel=not args.sequential, debug=args.debug
-        )
-    )
+    run_experiment_batch(example_configs, debug=args.debug)

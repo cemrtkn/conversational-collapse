@@ -25,7 +25,6 @@ sbatch scripts/run_experiment.sh config1.yaml config2.yaml config3.yaml
 
 #### 2. Programmatic Usage
 ```python
-import asyncio
 from babel_ai.experiment import Experiment, ExperimentConfig
 from utils import load_yaml_config
 
@@ -40,11 +39,11 @@ results = experiment.run()
 configs = [load_yaml_config(ExperimentConfig, path)
           for path in ["config1.yaml", "config2.yaml"]]
 
-async def run_batch():
+def run_batch():
     from main import run_experiment_batch
-    await run_experiment_batch(configs, parallel=True)
+    run_experiment_batch(configs, parallel=True)
 
-asyncio.run(run_batch())
+run_batch()
 ```
 
 ### Configuration Details
