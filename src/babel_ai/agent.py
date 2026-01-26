@@ -6,7 +6,9 @@ import uuid
 from typing import Dict, Generator, List
 
 from api.interp_inference import InterpInference
+from api.interpretability_tools.utils import intervention_factory
 from models import AgentConfig
+from models.api import LLMResponse
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ class Agent:
         self.id = uuid.uuid4()
         self.model = agent_config.model
         self.system_prompt = agent_config.system_prompt
+        self.intervention = intervention_factory(agent_config.intervention)
         self.config: AgentConfig = agent_config
         # TODO: Make this configurable
         # Currently, we only support conversational agents
@@ -32,7 +35,6 @@ class Agent:
         # how to handle the system prompt with alternalting
         # agent types.
         self.is_conversational_agent = True
-
         # Initialize InterpInference model
         self.interp_model = InterpInference(
             model=agent_config.model,
@@ -47,7 +49,7 @@ class Agent:
         )
         logger.debug(f"Agent {self.id} config: {self.config.model_dump()}")
 
-    def generate_response(self, messages: List[Dict[str, str]]) -> str:
+    def generate_response(self, messages: List[Dict[str, str]]) -> LLMResponse:
         """Generate a response from the agent.
 
         Args:
@@ -55,7 +57,7 @@ class Agent:
                      keys representing the conversation history
 
         Returns:
-            Generated response string
+            Generated response LLMResponse object
 
         Note:
             If a system_prompt is configured, it will be prepended as the
@@ -91,8 +93,9 @@ class Agent:
             max_new_tokens=self.config.max_new_tokens,
             temperature=self.config.temperature,
             top_p=self.config.top_p,
+            intervention=self.intervention,
         )
-        return response.content
+        return response
 
     @staticmethod
     def _define_msg_tree(

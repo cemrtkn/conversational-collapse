@@ -21,7 +21,7 @@ class InterpInference:
         self,
         model: str,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-        torch_dtype: torch.dtype = torch.float16,
+        dtype: torch.dtype = torch.float16,
         **model_kwargs,
     ):
         """Initialize the NNsight language model.
@@ -30,7 +30,7 @@ class InterpInference:
             model: HuggingFace model identifier
             (e.g., "meta-llama/Meta-Llama-3-8B-Instruct")
             device: Device to run on ("cpu", "cuda", "cuda:0", etc.)
-            torch_dtype: Torch dtype for model weights
+            dtype: Torch dtype for model weights
             **model_kwargs: Additional kwargs passed to LanguageModel
         """
         logger.info(f"Loading NNsight model: {model} on {device}")
@@ -38,7 +38,7 @@ class InterpInference:
         self.model = LanguageModel(
             model,
             device_map=device if device != "cpu" else None,
-            torch_dtype=torch_dtype,
+            dtype=dtype,
             **model_kwargs,
         )
 
@@ -60,8 +60,8 @@ class InterpInference:
         """Generate text from a single prompt."""
         logger.debug(f"Generating with prompt: {prompt[:50]}...")
 
+        out = None
         with self.model.generate(
-            prompt,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
@@ -69,19 +69,24 @@ class InterpInference:
             **generate_kwargs,
         ) as tracer:
             logits = list().save()
+            with tracer.invoke(prompt):  # First invoker
+                with tracer.iter[:]:
+                    logits.append(intervention(self.model))
+            with tracer.invoke():  # Second invoker
+                out = self.model.generator.output.save()
 
-            # Iterate over all generation steps
-            with tracer.iter[:]:
-                logits.append(intervention(self.model))
+        if out is not None:
+            generated_tokens = out[0, input_len:]
+            decoded_answer = self.model.tokenizer.decode(
+                generated_tokens, skip_special_tokens=True
+            )
+        else:
+            decoded_answer = ""
 
-            out = self.model.generator.output.save()
-
-        generated_tokens = out[0, input_len:]
-        decoded_answer = self.model.tokenizer.decode(
-            generated_tokens, skip_special_tokens=True
-        )
         intervention_output = {"logits": logits}
 
+        logger.info(f"Decoded answer: {decoded_answer}")
+        logger.info(f"Logits shape: {len(logits)}")
         return decoded_answer, intervention_output
 
     def generate_from_messages(
