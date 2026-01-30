@@ -334,7 +334,10 @@ class Experiment:
         # Convert metrics to DataFrame
         # TO:DO save interp outputs to a separate .parquet file
         df = pd.DataFrame([metric.to_dict() for metric in metrics])
-        interp_outputs = pd.DataFrame(df["intervention_output"].tolist())
+        interp_outputs = pd.DataFrame(
+            df["intervention_output"].tolist(), columns=["logits"]
+        )
+
         df = df.drop(columns=["intervention_output"])
 
         # Use current working directory if no output directory specified

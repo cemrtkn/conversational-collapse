@@ -6,14 +6,16 @@ from torch import save
 from api.interp_inference import InterpInference
 
 DEFAULT_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
-
 SYSTEM_PROMPT = "You are a helpful assistant participating in a conversation."
+ROUNDS = 50
 
 with open("data/sharegpt_sample.json", "r") as f:
     conversations = json.load(f)
 
-conversation = conversations[0]
-rounds = 50
+conversation = conversations[0]["items"]
+for message in conversation:
+    message["content"] = message["value"]
+    del message["value"]
 
 
 def define_msg_tree(
@@ -50,7 +52,7 @@ def main():
     inference = InterpInference(model=DEFAULT_MODEL)
     logits_list = []
 
-    rounds_left = rounds - len(conversation)
+    rounds_left = ROUNDS - len(conversation)
     for _ in range(rounds_left):
         messages = define_msg_tree(
             conversation,

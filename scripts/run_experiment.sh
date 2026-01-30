@@ -25,6 +25,5 @@ source .venv/bin/activate
 source .env
 
 python -c "import torch; print('CUDA available:', torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
-python -c "from pyarrow import __version__; print('PyArrow version:', __version__)"
 
 python src/main.py "$CONFIG_FILE"
