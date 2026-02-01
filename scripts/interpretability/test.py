@@ -77,7 +77,7 @@ def main():
         )
 
         print(f"Response: {response.content}")
-        logits_list.append(response.intervention_output["logits"])
+        logits_list.append(response.intervention_output["save_logits"])
 
     save(logits_list, "logits.pt")
     with open("conversation.json", "w") as f:

@@ -4,7 +4,7 @@ import logging
 from typing import Callable, Dict, List
 
 import torch
-from nnsight import LanguageModel
+from nnsight import LanguageModel, save
 
 from models.api import LLMResponse
 
@@ -68,12 +68,14 @@ class InterpInference:
             do_sample=do_sample,
             **generate_kwargs,
         ) as tracer:
-            logits = list().save()
-            with tracer.invoke(prompt):  # First invoker
+            intervention_output = save(list())
+
+            with tracer.invoke(prompt):
                 with tracer.iter[:]:
-                    logits.append(intervention(self.model))
-            with tracer.invoke():  # Second invoker
-                out = self.model.generator.output.save()
+                    intervention_output.append(intervention(self.model))
+
+            with tracer.invoke():
+                out = save(self.model.generator.output)
 
         if out is not None:
             generated_tokens = out[0, input_len:]
@@ -83,10 +85,6 @@ class InterpInference:
         else:
             decoded_answer = ""
 
-        intervention_output = {"logits": logits}
-
-        logger.info(f"Decoded answer: {decoded_answer}")
-        logger.info(f"Logits shape: {len(logits)}")
         return decoded_answer, intervention_output
 
     def generate_from_messages(
@@ -143,6 +141,12 @@ class InterpInference:
         output_token_count = max(
             1, output_ids["input_ids"].shape[1] - input_token_count
         )
+
+        # get the name of the intervention
+        intervention_name = (
+            intervention.__name__ if intervention else "no_intervention"
+        )
+        intervention_output = {intervention_name: intervention_output}
 
         return LLMResponse(
             content=output,
