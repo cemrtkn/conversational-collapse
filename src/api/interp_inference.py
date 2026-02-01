@@ -1,10 +1,10 @@
 """NNsight-based LLM interface for interpretability experiments."""
 
 import logging
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 import torch
-from nnsight import LanguageModel
+from nnsight import LanguageModel, save
 
 from models.api import LLMResponse
 
@@ -21,7 +21,7 @@ class InterpInference:
         self,
         model: str,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
-        torch_dtype: torch.dtype = torch.float16,
+        dtype: torch.dtype = torch.float16,
         **model_kwargs,
     ):
         """Initialize the NNsight language model.
@@ -30,7 +30,7 @@ class InterpInference:
             model: HuggingFace model identifier
             (e.g., "meta-llama/Meta-Llama-3-8B-Instruct")
             device: Device to run on ("cpu", "cuda", "cuda:0", etc.)
-            torch_dtype: Torch dtype for model weights
+            dtype: Torch dtype for model weights
             **model_kwargs: Additional kwargs passed to LanguageModel
         """
         logger.info(f"Loading NNsight model: {model} on {device}")
@@ -38,7 +38,7 @@ class InterpInference:
         self.model = LanguageModel(
             model,
             device_map=device if device != "cpu" else None,
-            torch_dtype=torch_dtype,
+            dtype=dtype,
             **model_kwargs,
         )
 
@@ -54,27 +54,38 @@ class InterpInference:
         top_p: float = 1.0,
         do_sample: bool = True,
         input_len: int = None,
+        intervention: Callable = None,
         **generate_kwargs,
     ) -> str:
         """Generate text from a single prompt."""
         logger.debug(f"Generating with prompt: {prompt[:50]}...")
 
+        out = None
         with self.model.generate(
-            prompt,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
             do_sample=do_sample,
             **generate_kwargs,
-        ) as _:
-            out = self.model.generator.output.save()
+        ) as tracer:
+            intervention_output = save(list())
 
-        generated_tokens = out[0, input_len:]
-        decoded_answer = self.model.tokenizer.decode(
-            generated_tokens, skip_special_tokens=True
-        )
+            with tracer.invoke(prompt):
+                with tracer.iter[:]:
+                    intervention_output.append(intervention(self.model))
 
-        return decoded_answer
+            with tracer.invoke():
+                out = save(self.model.generator.output)
+
+        if out is not None:
+            generated_tokens = out[0, input_len:]
+            decoded_answer = self.model.tokenizer.decode(
+                generated_tokens, skip_special_tokens=True
+            )
+        else:
+            decoded_answer = ""
+
+        return decoded_answer, intervention_output
 
     def generate_from_messages(
         self,
@@ -82,6 +93,7 @@ class InterpInference:
         max_new_tokens: int = 256,
         temperature: float = 1.0,
         top_p: float = 1.0,
+        intervention: Callable = None,
         **generate_kwargs,
     ) -> LLMResponse:
         """Generate response from chat messages.
@@ -114,12 +126,13 @@ class InterpInference:
         input_token_count = input_ids["input_ids"].shape[1]
 
         # Generate
-        output = self.generate(
+        output, intervention_output = self.generate(
             prompt=prompt,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
             input_len=input_token_count,
+            intervention=intervention,
             **generate_kwargs,
         )
 
@@ -129,10 +142,17 @@ class InterpInference:
             1, output_ids["input_ids"].shape[1] - input_token_count
         )
 
+        # get the name of the intervention
+        intervention_name = (
+            intervention.__name__ if intervention else "no_intervention"
+        )
+        intervention_output = {intervention_name: intervention_output}
+
         return LLMResponse(
             content=output,
             input_token_count=input_token_count,
             output_token_count=output_token_count,
+            intervention_output=intervention_output,
         )
 
     @property

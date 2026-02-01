@@ -211,21 +211,22 @@ class Experiment:
 
             # generate response
             response = agent.generate_response(self.messages)
+            text_response = response.content
 
             # log response
             logger.debug(
                 f"Experiment {self.uuid} "
                 f"Iteration {iteration} "
-                f"Response: {response}"
+                f"Response: {text_response}"
             )
 
             # add response to conversation history and update total characters
-            self.total_characters += len(response)
+            self.total_characters += len(text_response)
 
             self.messages.append(
                 {
                     "role": str(agent.id),
-                    "content": response,
+                    "content": text_response,
                 }
             )
 
@@ -235,7 +236,8 @@ class Experiment:
                     iteration=iteration,
                     timestamp=datetime.now(),
                     role=str(agent.id),
-                    content=response,
+                    content=text_response,
+                    intervention_output=response.intervention_output,
                     agent_id=str(agent.id),
                     agent_config=agent.config,
                 )
@@ -330,7 +332,13 @@ class Experiment:
         )
 
         # Convert metrics to DataFrame
+        # TO:DO save interp outputs to a separate .parquet file
         df = pd.DataFrame([metric.to_dict() for metric in metrics])
+        interp_outputs = pd.DataFrame(
+            df["intervention_output"].tolist(), columns=["logits"]
+        )
+
+        df = df.drop(columns=["intervention_output"])
 
         # Use current working directory if no output directory specified
         output_dir = output_dir or self.output_dir
@@ -344,14 +352,19 @@ class Experiment:
         meta_filename = f"{base_filename}_meta.json"
         csv_path = output_dir / csv_filename
         meta_path = output_dir / meta_filename
-
+        interp_path = output_dir / f"{base_filename}_interp.parquet"
         logger.debug(
             f"Experiment {self.uuid} "
             f"Saving csv to {csv_path}"
+            f"Saving interp outputs to {interp_path}"
             f"Saving metadata to {meta_path}"
         )
 
+        # save llm outputs and metrics
         df.to_csv(csv_path, index=False)
+
+        # Save interp outputs
+        interp_outputs.to_parquet(interp_path, index=False)
 
         # Save metadata
         metadata_dict = metadata.model_dump()
@@ -361,3 +374,4 @@ class Experiment:
 
         logger.info(f"Saved experiment results to {csv_path}")
         logger.info(f"Saved experiment metadata to {meta_path}")
+        logger.info(f"Saved interp outputs to {interp_path}")

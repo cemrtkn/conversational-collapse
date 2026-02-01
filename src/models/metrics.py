@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -185,6 +185,9 @@ class AgentMetric(Metric):
     agent_config: AgentConfig = Field(
         description="Configuration of the agent that generated the response"
     )
+    intervention_output: Dict[str, List[Any]] = Field(
+        description="Output of the intervention"
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert metric to a dictionary format suitable for CSV export."""
@@ -196,6 +199,7 @@ class AgentMetric(Metric):
             {
                 "agent_id": self.agent_id,
                 "agent_config": self.agent_config.model_dump(),
+                "intervention_output": self.intervention_output,
             }
         )
 

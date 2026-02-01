@@ -39,7 +39,7 @@ class TestInterpInference:
         mock_language_model.assert_called_once()
         call_kwargs = mock_language_model.call_args
         assert call_kwargs[0][0] == DEFAULT_MODEL
-        assert call_kwargs[1]["torch_dtype"] == torch.float16
+        assert call_kwargs[1]["dtype"] == torch.float16
 
     @patch("api.interp_inference.LanguageModel")
     def test_initialization_with_custom_device(self, mock_language_model):
